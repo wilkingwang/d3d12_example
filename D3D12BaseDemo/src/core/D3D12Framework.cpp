@@ -1,3 +1,4 @@
+#include "../utils/utils.h"
 #include "D3D12Framework.h"
 
 D3D12Framework::D3D12Framework(WindowConfig& windowConfig)
@@ -115,6 +116,124 @@ BOOL D3D12Framework::CreateIDXGISwapChain(HWND hWnd)
 	}
 
 	nFrameIndex = pIDXGISwapChain3->GetCurrentBackBufferIndex();
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateDescriptorHeap()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC tRTVHeacDesc = {};
+	
+	tRTVHeacDesc.NumDescriptors = nFrameBackBufCount;
+	tRTVHeacDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	tRTVHeacDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	HRESULT ret = pID3D12Device4->CreateDescriptorHeap(&tRTVHeacDesc, IID_PPV_ARGS(&pID3D12RTVHeap));
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	nRTVDescriptorSize = pID3D12Device4->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateRenderTargetView()
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE tRTVHandle = pID3D12RTVHeap->GetCPUDescriptorHandleForHeapStart();
+
+	for (UINT i = 0; i < nFrameBackBufCount; i++)
+	{
+		HRESULT ret = pIDXGISwapChain3->GetBuffer(i, IID_PPV_ARGS(&pID3D12RenderTargets[i]));
+		if (FAILED(ret))
+		{
+			return FALSE;
+		}
+
+		pID3D12Device4->CreateRenderTargetView(pID3D12RenderTargets[i].Get(), nullptr, tRTVHandle);
+		tRTVHandle.ptr += nRTVDescriptorSize;
+	}
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateRootSignature()
+{
+	ComPtr<ID3DBlob> pID3DSignatureBlob;
+	ComPtr<ID3DBlob> pId3DErrorBlob;
+	D3D12_ROOT_SIGNATURE_DESC tRootSignatureDesc = {0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT};
+
+	HRESULT ret = D3D12SerializeRootSignature(&tRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &pID3DSignatureBlob, &pId3DErrorBlob);
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	ret = pID3D12Device4->CreateRootSignature(0, pID3DSignatureBlob->GetBufferPointer(), 
+		pID3DSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&pID3D12RootSignature));
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateCommandList()
+{
+	HRESULT ret = pID3D12Device4->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&pID3D12CmdAllocator));
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	ret = pID3D12Device4->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, 
+		pID3D12CmdAllocator.Get(), pID3D12PipelineState.Get(), IID_PPV_ARGS(&pID3D12GraphicsCmdList));
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CompileFromFile(const std::string &shaderName, const std::string &entryPoint, const std::string &target, UINT iCompileFlags, ComPtr<ID3D10Blob> &pID3DBlobShader)
+{
+	TCHAR shaderFileName[MAX_PATH] = {};
+
+	string2tchar(shaderName, shaderFileName);
+
+	HRESULT ret = D3DCompileFromFile(shaderFileName, nullptr, nullptr, entryPoint, target, iCompileFlags, 0, &pID3DBlobShader, nullptr);
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateGraphicsPipelineState(D3D12_GRAPHICS_PIPELINE_STATE_DESC *psoDesc)
+{
+	HRESULT ret = pID3D12Device4->CreateGraphicsPipelineState(psoDesc, IID_PPV_ARGS(&pID3D12PipelineState));
+	if (FAILED(ret))
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+BOOL D3D12Framework::CreateResource(D3D12_RESOURCE_DESC desc, const unsigned int flags)
+{
+	D3D12_RESOURCE_FLAGS resourceFlags = D3D12_RESOURCE_FLAG_NONE;
+
+	if (flags & FW_BF_NEEDSUAV)
+	{
+		resourceFlags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+
+	desc.Flags = resourceFlags;
+
 
 	return TRUE;
 }

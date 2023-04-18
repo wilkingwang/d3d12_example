@@ -29,6 +29,19 @@ using namespace Microsoft::WRL;
 
 const UINT nFrameBackBufCount = 3u;
 
+enum FWBufferFlags
+{
+	FW_BF_NEEDSUAV = 1u << 0,			// 
+	FW_BF_NEEDSCPUMEMORY = 1u << 1,		// 
+	FW_BF_UNIFORMBUFFER = 1u << 2,		// 
+	FW_BF_VERTEXBUFFER = 1u << 3,		// 
+	FW_BF_INDEXBUFFER = 1u << 4			// 
+};
+
+class D3D12ResourceEx
+{
+	D3D12ResourceEx();
+};
 
 class D3D12Framework 
 {
@@ -41,6 +54,19 @@ public:
 
 	BOOL CreateD3D12CommandQueue();
 	BOOL CreateIDXGISwapChain(HWND hWnd);
+
+	BOOL CreateDescriptorHeap();
+	BOOL CreateRenderTargetView();
+
+	BOOL CreateRootSignature();
+
+	BOOL CreateCommandList();
+
+	BOOL CompileFromFile(const std::string &shaderName, const std::string &entryPoint, const std::string &target, UINT iCompileFlags, ComPtr<ID3D10Blob>& pID3DBlobShader);
+
+	BOOL CreateGraphicsPipelineState(D3D12_GRAPHICS_PIPELINE_STATE_DESC *psoDesc);
+
+	BOOL CreateResource(D3D12_RESOURCE_DESC desc, const unsigned int flags);
 
 private:
 	void outputIDXGIAdapterInfo(HWND hWnd, DXGI_ADAPTER_DESC1 &tAdapterDesc)
@@ -87,7 +113,7 @@ private:
 	ComPtr<ID3D12Resource>			pID3D12RenderTargets[nFrameBackBufCount];
 
 	ComPtr<ID3D12Fence>					pID3D12Fence;
-	ComPtr<ID3D12Resource>				pVertexBuffer;
+	ComPtr<ID3D12Resource>				pID3D12VertexBuffer;
 	ComPtr<ID3D12CommandAllocator>		pID3D12CmdAllocator;
 	ComPtr<ID3D12GraphicsCommandList>	pID3D12GraphicsCmdList;
 };
