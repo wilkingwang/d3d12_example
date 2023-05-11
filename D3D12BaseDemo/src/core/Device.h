@@ -58,4 +58,6 @@ private:
 
 	ID3D12CommandQueue* pDirectQueue = nullptr;
 	ID3D12CommandQueue* pComputerQueue = nullptr;
+
+
 };

@@ -6,6 +6,8 @@
 #include <dxgi1_6.h>
 
 #include "Device.h"
+#include "Fence.h"
+#include "FreeSyncHDR.h"
 
 class SwapChain
 {
@@ -22,5 +24,14 @@ private:
 	IDXGISwapChain4*	pSwapChain = nullptr;
 	ID3D12CommandQueue* pDirectQueue = nullptr;
 
-	DXGI_FORMAT m_swapChainFormat = DXGI_FORMAT_UNKNOWN;
+	Fence										swapChainFence;
+	ID3D12DescriptorHeap*						rtvHeaps;
+	DXGI_SWAP_CHAIN_DESC1						descSwapChain = {};
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>	cpuViewList;
+
+	DXGI_FORMAT swapChainFormat = DXGI_FORMAT_UNKNOWN;
+	DisplayMode displayMode = DisplayMode::DISPLAYMODE_SDR;
+
+	BOOL bTearingSupport = false;
+	BOOL bIsFullScreenExclusive = false;
 };

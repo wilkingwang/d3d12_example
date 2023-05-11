@@ -94,12 +94,18 @@ SET(COMMON_SOURCE_FILES
 )
 
 SET(CORE_SOURCE_FILES
+	${X_SOURCE_CORE_PATH}/Fence.h
+	${X_SOURCE_CORE_PATH}/Fence.cpp
+	${X_SOURCE_CORE_PATH}/Helper.h
+	${X_SOURCE_CORE_PATH}/Helper.cpp
 	${X_SOURCE_CORE_PATH}/Device.h
 	${X_SOURCE_CORE_PATH}/Device.cpp
 	${X_SOURCE_CORE_PATH}/Resource.h
 	${X_SOURCE_CORE_PATH}/Resource.cpp
 	${X_SOURCE_CORE_PATH}/SwapChain.h
 	${X_SOURCE_CORE_PATH}/SwapChain.cpp
+	${X_SOURCE_CORE_PATH}/FreeSyncHDR.h
+	${X_SOURCE_CORE_PATH}/FreeSyncHDR.cpp
 	${X_SOURCE_CORE_PATH}/D3D12Framework.h
 	${X_SOURCE_CORE_PATH}/D3D12Framework.cpp
 )
